@@ -1,0 +1,303 @@
+/* index */
+:root{
+  --red:#dc052d;
+  --crimson:#b5002e;
+  --dark:#0f0f10;
+  --bg:#fafafa;
+  --text:#1b1b1d;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Inter","Noto Sans KR",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--text);
+  background:var(--bg);
+}
+
+/* 상단 */
+.header{
+  background:var(--red);
+  color:#fff;
+  position:sticky;
+  top:0;
+  z-index:1000;
+  box-shadow:0 1px 0 rgba(0,0,0,.06);
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1200px;
+  height: 100px;
+  margin: auto;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:#fff;
+  text-decoration:none;
+  line-height:1;
+}
+.brand img{
+  height:150px;
+  width:auto;
+  display:block;
+}
+.brand span{
+  font-weight:700;
+  font-size:18px;
+  letter-spacing:.2px;
+}
+
+.top-bar-right{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.top-bar-right a{
+  color:#fff;
+  font-size:14px;
+  font-weight:600;
+  text-decoration:none;
+  opacity:.95;
+}
+.top-bar-right a:hover{opacity:1;text-decoration:underline}
+.lang select{
+  background:transparent;
+  border:1px solid rgba(255,255,255,.85);
+  color:#fff;
+  font-size:13px;
+  padding:6px 8px;
+  border-radius:6px;
+  appearance:none;
+}
+.icon-btn{
+  background:transparent;
+  border:1px solid rgba(255,255,255,.0);
+  color:#fff;
+  font-size:18px;
+  padding:4px 6px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.mobile-menu-btn{display:none}
+
+/* 메인 내비 */
+.nav-bar{
+  background:var(--crimson);
+  border-top:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(0,0,0,.06);
+}
+.nav-bar ul{
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 20px;
+  display:flex;
+  align-items:center;
+  gap:24px;
+  list-style:none;
+  height:44px;
+}
+.nav-bar a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+  font-size:14px;
+  letter-spacing:.2px;
+  padding:8px 0;
+  display:inline-block;
+  opacity:.95;
+}
+.nav-bar a:hover{
+  opacity:1;
+  text-decoration:underline;
+  text-underline-offset:4px;
+}
+
+.nav-search{margin-left:auto;flex:1;display:flex;justify-content:flex-end}
+.nav-search input{
+  width:220px;
+  max-width:40vw;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);
+  color:#fff;
+  height:32px;
+  padding:0 12px;
+  border-radius:8px;
+  outline:none;
+}
+
+.hero-strip {
+  max-width: 1500px;
+  margin: 0 auto;
+  height: 620px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  overflow: hidden;
+  background: #000;
+}
+
+/* 카드 기본 */
+.hero-card {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  margin-left: -50px;
+  background-size: cover;
+  background-position: center;
+  transition:
+    flex 0.45s cubic-bezier(0.25, 1, 0.5, 1),
+    filter 0.3s ease;
+  filter: brightness(0.6);
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* 기본 상태: 모든 카드 동일 너비 */
+.hero-strip:not(:hover) .hero-card {
+  flex: 1;
+}
+
+/* 카드별 이미지 및 clip-path */
+.hero-card-1 {
+  margin-left: 0;
+  z-index: 1;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 50px) 100%, 0 100%);
+  background-image: url("https://i.pinimg.com/1200x/89/b9/4c/89b94c32b377afcd793d4c941e422f78.jpg");
+}
+.hero-card-2 {
+  clip-path: polygon(50px 0, 100% 0, calc(100% - 50px) 100%, 0 100%);
+  background-image: url("https://i.pinimg.com/1200x/e4/5a/66/e45a66a56f8537078eb9672fcd86f536.jpg");
+}
+.hero-card-3 {
+  clip-path: polygon(50px 0, 100% 0, calc(100% - 50px) 100%, 0 100%);
+  background-image: url("https://i.pinimg.com/1200x/b6/3b/58/b63b5849399f2d7af608b883cfc97169.jpg");
+}
+.hero-card-4 {
+  clip-path: polygon(50px 0, 100% 0, 100% 100%, 0 100%);
+  background-image: url("https://i.pinimg.com/736x/c4/6e/33/c46e33aaa6e8342e68457b1a1623add8.jpg");
+}
+
+/* 호버 시: 해당 카드 가로 증가 */
+.hero-card:hover {
+  flex: 1.6;
+  filter: brightness(1.1);
+  z-index: 10;
+}
+
+/* 나머지는 줄어듦 */
+.hero-strip:hover .hero-card:not(:hover) {
+  flex: 0.9;
+  filter: brightness(0.5);
+}
+
+.lang select option {
+  background:#fff;
+  color:#000;
+}
+
+/* ------- 선수단 스타일 ------- */
+
+/* 섹션 제목 */
+.player-section h2 {
+  max-width: 1200px;
+  margin: 48px auto 16px;
+  font-size: 26px;
+  font-weight: 900;
+  color: #000;
+  letter-spacing: .5px;
+}
+
+/* 4열 그리드 */
+.player-grid {
+  max-width: 1200px;
+  margin: 0 auto 40px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+/* 카드 기본 */
+.player-card {
+  position: relative;
+  height: 380px;
+  background: #222;
+  background-size: cover;
+  background-position: center;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  transition: .35s ease;
+  color: #fff;
+}
+
+/* Hover 시 약간 확대 */
+.player-card:hover {
+  transform: scale(1.05);
+  filter: brightness(1.06);
+}
+
+/* 기본 표시: 등번호 */
+.player-number {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 32px;
+  font-weight: 900;
+  z-index: 3;
+}
+
+/* 기본 표시: 이름 */
+.player-name {
+  width: 100%;
+  padding: 10px 12px 14px;
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(to top, rgba(0,0,0,.6), transparent);
+  z-index: 3;
+}
+
+/* Hover 오버레이(빨강 배경) */
+.player-stats {
+  position: absolute;
+  inset: 0;
+  background: #b5002e;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: .35s ease;
+  z-index: 4;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+/* Hover 시 스탯 표시 */
+.player-card:hover .player-stats {
+  opacity: 1;
+}
+
+/* Hover 시 이미지, 등번호 숨기기 (이름 제외) */
+.player-card:hover {
+  background-image: none !important;
+}
+.player-card:hover .player-number {
+  opacity: 0;
+}
+
+/* 이름은 항상 표시되도록 유지 (z-index도 상단) */
+.player-card .player-name {
+  z-index: 5;
+}
