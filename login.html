@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 - FC Bayern München 팬 사이트</title>
+  <link rel="stylesheet" href="login.css">
+  <script defer src="login.js"></script>
+</head>
+<body>
+
+<div class="login-container">
+
+  <!-- Left Image Section -->
+  <div class="login-image"></div>
+
+  <!-- Right Form Section -->
+  <div class="login-form">
+
+    <!-- Click logo → HOME -->
+    <a href="index.html">
+      <img class="login-logo" src="https://i.pinimg.com/1200x/a7/26/db/a726db78d1229cba0f76b4ec54dcc580.jpg" alt="FC Bayern Logo">
+    </a>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <h2>Sign In</h2>
+      
+      <form>
+        <div class="form-field">
+          <label>ID *</label>
+          <input type="text" placeholder="아이디를 입력하세요" required>
+        </div>
+
+        <div class="form-field">
+          <label>Password *</label>
+          <input type="password" placeholder="비밀번호를 입력하세요" required>
+        </div>
+
+        <div class="forgot">
+          <a href="#">Forgot password</a>
+        </div>
+
+        <div class="remember">
+          <input type="checkbox" id="rememberMe">
+          <label for="rememberMe">Remember me</label>
+        </div>
+
+        <button type="submit" class="btn-login">Sign In</button>
+
+        <div class="switch-auth">
+          <a id="goSignup">Don't have an account? Register</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signupForm">
+      <h2>Register</h2>
+
+      <form>
+        <div class="form-field">
+          <label>Nickname *</label>
+          <input type="text" placeholder="닉네임을 입력하세요" required>
+        </div>
+
+        <div class="form-field">
+          <label>ID *</label>
+          <input type="text" placeholder="아이디를 입력하세요" required>
+        </div>
+
+        <div class="form-field">
+          <label>Password *</label>
+          <input type="password" placeholder="비밀번호를 입력하세요" required>
+        </div>
+
+        <button type="submit" class="btn-login">Create Account</button>
+
+        <div class="switch-auth">
+          <a id="goLogin">Back to Sign In</a>
+        </div>
+      </form>
+    </div>
+
+    <footer>
+      <a href="#" class="footer-link">Contact</a>
+      <a href="#" class="footer-link">Privacy</a>
+      <a href="#" class="footer-link">Accessibility</a>
+    </footer>
+
+  </div>
+</div>
+
+</body>
+</html>
