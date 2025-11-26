@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FC Bayern 뉴스 - FC Bayern München 팬 사이트</title>
+
+  <!-- 공통 폰트 + 공통 스타일 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- 뉴스 전용 스타일 -->
+  <link rel="stylesheet" href="news.css" />
+</head>
+<body>
+
+  <!-- 상단: 로고/유틸 -->
+  <header class="header">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <a class="brand" href="index.html" aria-label="홈으로">
+          <img src="https://i.pinimg.com/736x/0c/8b/d6/0c8bd6e9c1f84a3f82fd4583a3c5f031.jpg" alt="FC Bayern Logo" />
+          <span>FC Bayern München</span>
+        </a>
+      </div>
+      <div class="top-bar-right">
+        <div class="lang">
+          <select aria-label="언어 선택">
+            <option>한국어</option>
+            <option>English</option>
+          </select>
+        </div>
+        <a href="login.html" class="icon-btn" aria-label="로그인">👤</a>
+      </div>
+    </div>
+
+    <!-- 메인 내비 -->
+    <nav class="nav-bar" id="mainNav">
+      <ul>
+        <li><a href="index.html">홈</a></li>
+        <li><a href="players.html">선수단 소개</a></li>
+        <li><a href="community.html">팬 커뮤니티</a></li>
+        <li><a href="fixtures.html">경기 결과 및 순위</a></li>
+        <li><a class="active" href="news.html">뉴스</a></li>
+        <li class="nav-search">
+          <input type="search" placeholder="검색" aria-label="사이트 검색" />
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- 뉴스 레이아웃 -->
+  <main class="news-main">
+    <section class="news-layout">
+
+      <!-- 왼쪽: 속보 컬럼 -->
+      <aside class="breaking-column">
+        <div class="breaking-panel">
+          <h2 class="breaking-title">속보</h2>
+          <div id="breakingList" class="breaking-list">
+            <!-- JS로 속보 아이템 렌더 -->
+          </div>
+          <button class="breaking-more">
+            속보 더 보기 →
+          </button>
+        </div>
+      </aside>
+
+      <!-- 오른쪽: 뉴스 카드 그리드 -->
+      <section class="news-grid" id="newsGrid">
+        <!-- JS로 뉴스 카드 렌더 -->
+      </section>
+
+    </section>
+  </main>
+
+  <script src="news.js"></script>
+</body>
+</html>
