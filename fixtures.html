@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>경기 결과 및 순위 - FC Bayern München</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="fixtures.css">
+  <script defer src="fixtures.js"></script>
+</head>
+<body>
+
+<header class="header">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <a class="brand" href="index.html">
+        <img src="https://i.pinimg.com/736x/0c/8b/d6/0c8bd6e9c1f84a3f82fd4583a3c5f031.jpg" alt="logo">
+        <span>FC Bayern München</span>
+      </a>
+    </div>
+    <div class="top-bar-right">
+      <div class="lang">
+        <select>
+          <option>한국어</option>
+          <option>English</option>
+        </select>
+      </div>
+      <a class="icon-btn" href="login.html">👤</a>
+    </div>
+  </div>
+
+  <nav class="nav-bar">
+    <ul>
+      <li><a href="index.html">홈</a></li>
+      <li><a href="players.html">선수단 소개</a></li>
+      <li><a href="community.html">팬 커뮤니티</a></li>
+      <li><a class="active" href="fixtures.html">경기 결과 및 순위</a></li>
+      <li class="nav-search"><input type="search" placeholder="검색"></li>
+    </ul>
+  </nav>
+</header>
+
+<main class="fixtures-container">
+
+  <!-- 월 탭 -->
+  <div class="month-tabs">
+    <button class="month-btn active" data-month="11">11월</button>
+    <button class="month-btn" data-month="12">12월</button>
+  </div>
+
+  <!-- 경기 리스트 -->
+  <ul class="match-list">
+    <!-- JS로 렌더링됨 -->
+  </ul>
+
+</main>
+
+</body>
+</html>
