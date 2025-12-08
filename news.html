@@ -8,11 +8,17 @@
   <!-- 공통 폰트 + 공통 스타일 -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="style.css" />
 
   <!-- 뉴스 전용 스타일 -->
   <link rel="stylesheet" href="news.css" />
+
+  <!-- 로그인 상태 공통 관리 -->
+  <script defer src="auth.js"></script>
 </head>
 <body>
 
@@ -21,7 +27,10 @@
     <div class="top-bar">
       <div class="top-bar-left">
         <a class="brand" href="index.html" aria-label="홈으로">
-          <img src="https://i.pinimg.com/736x/0c/8b/d6/0c8bd6e9c1f84a3f82fd4583a3c5f031.jpg" alt="FC Bayern Logo" />
+          <img
+            src="https://i.pinimg.com/736x/0c/8b/d6/0c8bd6e9c1f84a3f82fd4583a3c5f031.jpg"
+            alt="FC Bayern Logo"
+          />
           <span>FC Bayern München</span>
         </a>
       </div>
@@ -32,7 +41,15 @@
             <option>English</option>
           </select>
         </div>
-        <a href="login.html" class="icon-btn" aria-label="로그인">👤</a>
+
+        <!-- 로그인 전: 아이콘 버튼 -->
+        <a id="navLogin" href="login.html" class="icon-btn" aria-label="로그인">👤</a>
+
+        <!-- 로그인 후: 닉네임 + 로그아웃 -->
+        <div id="navUserBox" class="user-info" style="display:none;">
+          <span id="navUserNickname" class="nickname"></span>
+          <button id="navLogoutBtn" class="logout-btn" type="button">로그아웃</button>
+        </div>
       </div>
     </div>
 

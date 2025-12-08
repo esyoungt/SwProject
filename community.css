@@ -60,3 +60,20 @@
   line-height: 1.4;
   word-break: keep-all;
 }
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #fff;
+  padding: 4px 10px;
+  font-size: 14px;
+  margin-left: 6px;
+  cursor: pointer;
+  color: white;
+  border-radius: 4px;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background: white;
+  color: #b5002e;
+}
