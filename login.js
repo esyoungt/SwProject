@@ -112,7 +112,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok && result.success) {
         // 🔹 로그인 정보 localStorage에 저장 (로그인 상태 유지)
-        localStorage.setItem("fb_user", JSON.stringify(result.user));
+        // 로그인 성공 후
+        localStorage.setItem("user", JSON.stringify(data.user));
+
 
         alert(`${result.user.nickname}님, 로그인 성공!`);
 
