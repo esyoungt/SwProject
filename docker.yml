@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fcb
+      MYSQL_USER: fcbuser
+      MYSQL_PASSWORD: fcbpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  mongodb:
+    image: mongo:6
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  app:
+    build: .
+    container_name: node_app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+      - mongodb
+    environment:
+      DB_HOST: mysql
+      DB_USER: fcbuser
+      DB_PASS: fcbpass
+      DB_NAME: fcb
+      MONGO_URI: mongodb://mongodb:27017/fcb
+
+volumes:
+  mysql_data:
+  mongo_data:

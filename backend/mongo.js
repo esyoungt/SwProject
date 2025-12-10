@@ -1,10 +1,12 @@
 // mongo.js
+require("dotenv").config();
 const mongoose = require("mongoose");
 
-const MONGO_URI = "mongodb://127.0.0.1:27017/fcbayern_community";
+// 👉 .env의 값 우선, 없으면 로컬 DB로 연결
+const MONGO_URI =
+  process.env.MONGO_URI || "mongodb://127.0.0.1:27017/fcbayern_community";
 
-// ⚠ 최신 Mongoose에서는 useNewUrlParser, useUnifiedTopology 옵션이 필요 없고,
-// 넣으면 지금처럼 MongoParseError가 뜨니까 그냥 URI만 넘겨서 연결하면 된다.
+// 최신 mongoose는 옵션 제거
 mongoose
   .connect(MONGO_URI)
   .then(() => {
@@ -26,7 +28,7 @@ const postSchema = new mongoose.Schema(
     mediaUrl: { type: String, default: null },
     mediaType: { type: String, default: null }, // "image" | "video" | null
   },
-  { timestamps: true } // createdAt, updatedAt 자동 추가
+  { timestamps: true }
 );
 
 /**
@@ -47,13 +49,10 @@ const commentSchema = new mongoose.Schema(
 );
 
 /**
- * OverwriteModelError 방지용: 이미 있으면 재사용
+ * 모델 중복 생성 방지
  */
-const Post =
-  mongoose.models.Post || mongoose.model("Post", postSchema);
-
-const Comment =
-  mongoose.models.Comment || mongoose.model("Comment", commentSchema);
+const Post = mongoose.models.Post || mongoose.model("Post", postSchema);
+const Comment = mongoose.models.Comment || mongoose.model("Comment", commentSchema);
 
 module.exports = {
   mongoose,

@@ -1,21 +1,20 @@
 // server.js
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 
-const db = require("./db");                     // MySQL 연결 (users)
-const { Post, Comment } = require("./mongo");   // MongoDB 연결 + 모델들
+const db = require("./db");              // MySQL 연결 (users 테이블)
+const { Post, Comment } = require("./mongo"); // MongoDB 연결 + 모델들
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;   // Render 배포 대비
 
 // CORS + JSON 파서
-// 쿠키/세션을 쓰지 않고, 프론트는 localStorage로 로그인 상태를 관리하므로
-// credentials:false 로 두고, origin:true 로 개발용 모든 origin 허용
 app.use(
   cors({
-    origin: true,
-    credentials: false,
+    origin: true,        // 개발 단계: 모든 Origin 허용
+    credentials: false,  // 쿠키 안 쓰고 localStorage만 사용
   })
 );
 app.use(express.json());
@@ -108,7 +107,7 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    // 세션은 쓰지 않고, 프론트에서 localStorage 로 user 보관
+    // 프론트가 localStorage에 user 저장해서 사용
     return res.json({
       success: true,
       user: {
@@ -126,7 +125,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// 디버그용: 유저 목록
+// 유저 목록 (디버그용)
 app.get("/users", async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -231,7 +230,7 @@ app.get("/community/:postId/comments", async (req, res) => {
     console.log("GET /community/:postId/comments", postId);
 
     const comments = await Comment.find({ postId })
-      .sort({ createdAt: 1 }) // 오래된 댓글부터
+      .sort({ createdAt: 1 })
       .lean();
 
     res.json({ success: true, comments });
@@ -246,10 +245,7 @@ app.delete("/community/post/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 게시글 삭제
     await Post.findByIdAndDelete(id);
-
-    // 연관 댓글도 삭제
     await Comment.deleteMany({ postId: id });
 
     res.json({ success: true, message: "게시글 및 댓글 삭제 완료" });
@@ -258,7 +254,6 @@ app.delete("/community/post/:id", async (req, res) => {
     res.json({ success: false, message: "게시글 삭제 실패" });
   }
 });
-
 
 // 서버 실행
 app.listen(PORT, () => {
