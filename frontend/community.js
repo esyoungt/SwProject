@@ -1,24 +1,7 @@
 // community.js
 
-// 로그인 사용자 정보 가져오기 (localStorage 사용)
-function getCurrentUser() {
-  try {
-    const raw = localStorage.getItem("fcb_user");
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-// 🔥 여기만 핵심 수정 부분
-// - localhost 에서 열면: 백엔드도 localhost:3000 사용
-// - 그 외(깃허브 등)에서 열면: 공인 IP 로 접속
-const API_BASE =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-    ? "http://localhost:3000"
-    : "http://202.31.146.36:3000"; // ← 여기를 네 공인 IP:포트로
+// 여기서는 API_BASE, getCurrentUser 를 "auth.js에서 전역으로" 가져다 씀
+// 새로 선언하지 않는다!
 
 document.addEventListener("DOMContentLoaded", () => {
   const writeSection = document.getElementById("writeSection");
@@ -76,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const res = await fetch(`${API_BASE}/community/post`, {
+        const res = await fetch(`${window.API_BASE}/community/post`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -129,15 +112,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!content) return;
 
       try {
-        const res = await fetch(`${API_BASE}/community/${postId}/comment`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            authorId: currentUser.id,
-            authorNickname: currentUser.nickname,
-            content,
-          }),
-        });
+        const res = await fetch(
+          `${window.API_BASE}/community/${postId}/comment`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              authorId: currentUser.id,
+              authorNickname: currentUser.nickname,
+              content,
+            }),
+          }
+        );
 
         const data = await res.json();
 
@@ -174,10 +160,12 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPosts();
 });
 
+// ----------------------
 // 게시글 목록 불러오기
+// ----------------------
 async function loadPosts() {
   try {
-    const res = await fetch(`${API_BASE}/community/posts`);
+    const res = await fetch(`${window.API_BASE}/community/posts`);
     const data = await res.json();
 
     if (!res.ok || !data.success) {
@@ -199,7 +187,6 @@ async function loadPosts() {
   }
 }
 
-// 게시글 카드 추가/앞에 추가
 function appendPost(post) {
   const feed = document.querySelector(".community-feed");
   if (!feed) return;
@@ -215,12 +202,14 @@ function prependPost(post) {
   loadComments(post._id);
 }
 
-// 게시글 카드 생성 (삭제 버튼 + 유튜브 embed 처리)
+// ----------------------
+// 게시글 카드 생성
+// ----------------------
 function createPostCard(post) {
   const user = getCurrentUser();
   const wrapper = document.createElement("article");
   wrapper.className = "post-card";
-  wrapper.dataset.post = post._id; // 삭제 시 DOM 찾기용
+  wrapper.dataset.post = post._id;
 
   const created = new Date(post.createdAt || Date.now());
   const dateText = created.toLocaleString("ko-KR", {
@@ -298,10 +287,12 @@ function createPostCard(post) {
   return wrapper;
 }
 
+// ----------------------
 // 댓글 목록 불러오기
+// ----------------------
 async function loadComments(postId) {
   try {
-    const res = await fetch(`${API_BASE}/community/${postId}/comments`);
+    const res = await fetch(`${window.API_BASE}/community/${postId}/comments`);
     const data = await res.json();
 
     if (!res.ok || !data.success) return;
@@ -331,12 +322,14 @@ async function loadComments(postId) {
   }
 }
 
-// 게시글 삭제 (프론트에서 서버로 DELETE 요청)
+// ----------------------
+// 게시글 삭제
+// ----------------------
 async function deletePost(postId) {
   if (!confirm("삭제하시겠습니까?")) return;
 
   try {
-    const res = await fetch(`${API_BASE}/community/post/${postId}`, {
+    const res = await fetch(`${window.API_BASE}/community/post/${postId}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     });
@@ -356,16 +349,17 @@ async function deletePost(postId) {
   }
 }
 
-// 간단한 XSS 방지
+// ----------------------
+// 유틸 함수들
+// ----------------------
 function escapeHtml(str) {
   if (!str) return "";
-  return str
+  return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;`);
+    .replace(/>/g, "&gt;");
 }
 
-// 유튜브 URL을 embed용 URL로 변환
 function getYoutubeEmbedUrl(raw) {
   try {
     const url = new URL(raw);

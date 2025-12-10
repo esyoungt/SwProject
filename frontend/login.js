@@ -1,42 +1,47 @@
 // login.js
 console.log("login.js loaded");
 
+// auth.js에도 API_BASE가 있어서 이름 충돌을 피하기 위해 다른 이름 사용
+const LOGIN_API_BASE = "http://localhost:3000";
+
 document.addEventListener("DOMContentLoaded", () => {
   const loginBox = document.getElementById("loginForm");
   const signupBox = document.getElementById("signupForm");
   const goSignup = document.getElementById("goSignup");
   const goLogin = document.getElementById("goLogin");
 
-  if (!loginBox || !signupBox) {
-    console.warn("loginForm / signupForm 요소를 찾지 못했습니다.");
+  const loginForm = document.getElementById("loginFormInner");
+  const signupForm = document.getElementById("signupFormInner");
+
+  if (!loginBox || !signupBox || !loginForm || !signupForm) {
+    console.warn("login / signup 요소를 찾지 못했습니다.");
     return;
   }
 
-  // 화면 전환
-  goSignup.addEventListener("click", () => {
-    loginBox.style.display = "none";
-    signupBox.style.display = "block";
-  });
+  // ===== 화면 전환 =====
+  if (goSignup) {
+    goSignup.addEventListener("click", (e) => {
+      e.preventDefault();
+      loginBox.style.display = "none";
+      signupBox.style.display = "block";
+    });
+  }
 
-  goLogin.addEventListener("click", () => {
-    signupBox.style.display = "none";
-    loginBox.style.display = "block";
-  });
+  if (goLogin) {
+    goLogin.addEventListener("click", (e) => {
+      e.preventDefault();
+      signupBox.style.display = "none";
+      loginBox.style.display = "block";
+    });
+  }
 
   // ===== 회원가입 처리 =====
-  const signupForm = signupBox.querySelector("form");
   signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const nickname = signupForm
-      .querySelector("input[placeholder='닉네임을 입력하세요']")
-      .value.trim();
-    const username = signupForm
-      .querySelector("input[placeholder='아이디를 입력하세요']")
-      .value.trim();
-    const password = signupForm
-      .querySelector("input[placeholder='비밀번호를 입력하세요']")
-      .value.trim();
+    const nickname = document.getElementById("signupNickname").value.trim();
+    const username = document.getElementById("signupId").value.trim();
+    const password = document.getElementById("signupPassword").value.trim();
 
     if (!nickname || !username || !password) {
       alert("모든 필드를 입력하세요.");
@@ -44,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const res = await fetch("http://localhost:3000/signup", {
+      const res = await fetch(`${LOGIN_API_BASE}/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nickname, username, password }),
@@ -69,16 +74,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== 로그인 처리 =====
-  const loginForm = loginBox.querySelector("form");
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const username = loginForm
-      .querySelector("input[placeholder='아이디를 입력하세요']")
-      .value.trim();
-    const password = loginForm
-      .querySelector("input[placeholder='비밀번호를 입력하세요']")
-      .value.trim();
+    const username = document.getElementById("loginId").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
 
     if (!username || !password) {
       alert("아이디와 비밀번호를 입력하세요.");
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const res = await fetch("http://localhost:3000/login", {
+      const res = await fetch(`${LOGIN_API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 🔥 여기! localStorage 키 이름을 fcb_user 로 통일
+      // localStorage에 유저 정보 저장
       localStorage.setItem("fcb_user", JSON.stringify(data.user));
 
       alert("로그인 성공");
