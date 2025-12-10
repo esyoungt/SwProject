@@ -1,51 +1,59 @@
 // auth.js
-document.addEventListener("DOMContentLoaded", () => {
-  const loginLink = document.getElementById("navLogin");
-  const userBox   = document.getElementById("navUserBox");
-  const nickSpan  = document.getElementById("navUserNickname");
-  const logoutBtn = document.getElementById("navLogoutBtn");
+console.log("auth.js loaded");
 
-  // 저장된 로그인 정보 가져오기
-  const saved = localStorage.getItem("fb_user");
-
-  // ------------------------------
-  // 로그인 안된 상태
-  // ------------------------------
-  if (!saved) {
-    if (loginLink) loginLink.style.display = "inline-block";
-    if (userBox)   userBox.style.display   = "none";
-    return;
-  }
-
-  // ------------------------------
-  // 로그인 되어 있는 상태
-  // ------------------------------
-  let user;
+function getCurrentUser() {
   try {
-    user = JSON.parse(saved);
-  } catch (err) {
-    console.error("fb_user parsing failed:", err);
-    localStorage.removeItem("fb_user");
-    if (loginLink) loginLink.style.display = "inline-block";
-    if (userBox)   userBox.style.display   = "none";
+    const raw = localStorage.getItem("fcb_user");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const user = getCurrentUser();
+
+  const iconBtn = document.querySelector(".top-bar-right .icon-btn");
+  const userInfo = document.querySelector(".top-bar-right .user-info");
+  const nicknameSpan = document.querySelector(".top-bar-right .nickname");
+  const adminLink = document.querySelector(".top-bar-right .admin-link");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (!iconBtn || !userInfo) {
+    // 헤더 구조가 없는 페이지면 조용히 패스
     return;
   }
 
-  // 로그인 버튼 숨기기, 유저 UI 보이기
-  if (loginLink) loginLink.style.display = "none";
-  if (userBox)   userBox.style.display   = "inline-flex";
+  // 로그인 안 된 상태
+  if (!user) {
+    iconBtn.style.display = "inline-flex";
+    userInfo.style.display = "none";
+    return;
+  }
 
-  // 닉네임 표시
-  if (nickSpan) nickSpan.textContent = `${user.nickname}님`;
+  // 로그인 된 상태
+  iconBtn.style.display = "none";
+  userInfo.style.display = "flex";
+  if (nicknameSpan) {
+    nicknameSpan.textContent = user.nickname || user.username || "User";
+  }
 
-  // 로그아웃 기능
+  // 관리자 계정 처리 예시 (원하면 조건 바꿔도 됨)
+  if (adminLink) {
+    if (user.username === "admin") {
+      adminLink.style.display = "block";
+    } else {
+      adminLink.style.display = "none";
+    }
+  }
+
+  // 로그아웃
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
-      const confirmed = confirm("로그아웃 하시겠습니까?");
-      if (!confirmed) return;
-
-      localStorage.removeItem("fb_user");
-      location.reload(); // 화면 새로고침 (UI 즉시 반영)
+      localStorage.removeItem("fcb_user");
+      alert("로그아웃 되었습니다.");
+      window.location.href = "index.html";
     });
   }
 });

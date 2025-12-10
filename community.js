@@ -1,236 +1,397 @@
 // community.js
-console.log("community.js loaded");
+
+// 로그인 사용자 정보 가져오기 (localStorage 사용)
+function getCurrentUser() {
+  try {
+    const raw = localStorage.getItem("fcb_user");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+const API_BASE = "http://localhost:3000";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const writeBtn = document.getElementById("writePostBtn");
   const writeSection = document.getElementById("writeSection");
+  const writeToggleBtn = document.getElementById("writePostBtn");
+  const writeCancelBtn = document.getElementById("cancelWriteBtn");
   const writeForm = document.getElementById("writeForm");
-  const cancelWriteBtn = document.getElementById("cancelWriteBtn");
-  const titleInput = document.getElementById("postTitle");
-  const contentInput = document.getElementById("postContent");
-  const mediaUrlInput = document.getElementById("postMediaUrl");
-  const feed = document.getElementById("communityFeed");
+  const feedEl = document.getElementById("communityFeed");
 
-  // 항상 최신 로그인 정보를 읽기 위한 함수
-  function getCurrentUser() {
-    const saved =
-      localStorage.getItem("user") || localStorage.getItem("fb_user");
-    return saved ? JSON.parse(saved) : null;
-  }
-
-  // 글쓰기 버튼: 폼 열기
-  if (writeBtn) {
-    writeBtn.addEventListener("click", () => {
+  // ▶ 새 글 쓰기 버튼 토글
+  if (writeToggleBtn) {
+    writeToggleBtn.addEventListener("click", () => {
       const user = getCurrentUser();
-
       if (!user) {
-        alert("글쓰기는 로그인 후 이용 가능합니다.");
+        alert("로그인 후 글을 작성할 수 있습니다.");
         window.location.href = "login.html";
         return;
       }
-      if (writeSection) {
-        writeSection.style.display = "block";
-        if (titleInput) titleInput.focus();
-      }
+
+      if (!writeSection) return;
+
+      writeSection.style.display =
+        writeSection.style.display === "none" || !writeSection.style.display
+          ? "block"
+          : "none";
     });
   }
 
-  // 글쓰기 취소 버튼
-  if (cancelWriteBtn && writeSection && writeForm) {
-    cancelWriteBtn.addEventListener("click", () => {
-      writeForm.reset();
-      writeSection.style.display = "none";
+  // ▶ 글쓰기 취소 버튼
+  if (writeCancelBtn) {
+    writeCancelBtn.addEventListener("click", () => {
+      if (writeSection) writeSection.style.display = "none";
+      if (writeForm) writeForm.reset();
     });
   }
 
-  // 글 등록 처리
+  // ▶ 글 등록
   if (writeForm) {
     writeForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const user = getCurrentUser();
-      if (!user) {
-        alert("로그인 정보가 없습니다. 다시 로그인해주세요.");
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        alert("로그인 후 글을 작성할 수 있습니다.");
         window.location.href = "login.html";
         return;
       }
 
-      const title = titleInput.value.trim();
-      const content = contentInput.value.trim();
-      const mediaUrlRaw = mediaUrlInput.value.trim();
+      const title = document.getElementById("postTitle").value.trim();
+      const content = document.getElementById("postContent").value.trim();
+      const mediaUrl = document.getElementById("postMediaUrl").value.trim();
 
       if (!title || !content) {
-        alert("제목과 내용을 모두 입력하세요.");
+        alert("제목과 내용을 입력해 주세요.");
         return;
       }
 
-      let mediaUrl = mediaUrlRaw || null;
-      let mediaType = null;
-
-      if (mediaUrl) {
-        const lower = mediaUrl.toLowerCase();
-        if (
-          lower.endsWith(".mp4") ||
-          lower.endsWith(".webm") ||
-          lower.endsWith(".ogg") ||
-          lower.includes("youtube.com") ||
-          lower.includes("youtu.be")
-        ) {
-          mediaType = "video";
-        } else if (
-          lower.endsWith(".jpg") ||
-          lower.endsWith(".jpeg") ||
-          lower.endsWith(".png") ||
-          lower.endsWith(".gif") ||
-          lower.endsWith(".webp") ||
-          lower.endsWith(".avif")
-        ) {
-          mediaType = "image";
-        } else {
-          mediaType = "image";
-        }
-      }
-
       try {
-        const res = await fetch("http://localhost:3000/community/post", {
+        const res = await fetch(`${API_BASE}/community/post`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title,
             content,
-            authorId: user.id,
-            authorNickname: user.nickname,
-            mediaUrl,
-            mediaType,
+            authorId: currentUser.id,
+            authorNickname: currentUser.nickname,
+            mediaUrl: mediaUrl || null,
+            mediaType: null,
           }),
         });
 
         const data = await res.json();
-        console.log("POST /community/post:", data);
 
-        if (!data.success) {
-          alert(data.message || "게시글 등록에 실패했습니다.");
+        if (!res.ok || !data.success) {
+          console.error("글 등록 실패:", res.status, data);
+          alert(data.message || "글 등록에 실패했습니다.");
           return;
         }
 
-        alert("게시글이 등록되었습니다.");
+        // 새 글을 맨 위에 추가
+        prependPost(data.post);
+
         writeForm.reset();
         if (writeSection) writeSection.style.display = "none";
-        await loadPosts();
       } catch (err) {
-        console.error(err);
-        alert("서버 오류가 발생했습니다.");
+        console.error("글 등록 중 통신 오류:", err);
+        alert("서버와 통신 중 오류가 발생했습니다.");
       }
     });
   }
 
-  // 페이지 로드시 글 목록 로드
-  loadPosts();
+  // ▶ 댓글 등록 (이벤트 위임)
+  if (feedEl) {
+    feedEl.addEventListener("submit", async (e) => {
+      if (!e.target.matches(".comment-form")) return;
+      e.preventDefault();
 
-  async function loadPosts() {
-    if (!feed) return;
-
-    feed.innerHTML = "<p>게시글을 불러오는 중입니다...</p>";
-
-    try {
-      const res = await fetch("http://localhost:3000/community/posts");
-      const data = await res.json();
-      console.log("GET /community/posts:", data);
-
-      if (!data.success || !Array.isArray(data.posts) || data.posts.length === 0) {
-        feed.innerHTML = "<p>작성된 게시글이 없습니다.</p>";
+      const currentUser = getCurrentUser();
+      if (!currentUser) {
+        alert("로그인 후 댓글을 작성할 수 있습니다.");
+        window.location.href = "login.html";
         return;
       }
 
-      feed.innerHTML = "";
+      const form = e.target;
+      const postId = form.dataset.postId;
+      const input = form.querySelector("input[type='text']");
+      const content = input.value.trim();
+      if (!content) return;
 
-      data.posts.forEach((post) => {
-        const card = document.createElement("article");
-        card.className = "post-card";
+      try {
+        const res = await fetch(`${API_BASE}/community/${postId}/comment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            authorId: currentUser.id,
+            authorNickname: currentUser.nickname,
+            content,
+          }),
+        });
 
-        const created = new Date(post.createdAt);
-        const createdStr = isNaN(created.getTime())
-          ? ""
-          : created.toLocaleString();
+        const data = await res.json();
 
-        const safeTitle = escapeHtml(post.title);
-        const safeContent = escapeHtml(post.content).replace(/\n/g, "<br>");
-        const safeNickname = escapeHtml(post.authorNickname);
-
-        let mediaHtml = "";
-        if (post.mediaUrl) {
-          if (post.mediaType === "video") {
-            if (
-              post.mediaUrl.includes("youtube.com") ||
-              post.mediaUrl.includes("youtu.be")
-            ) {
-              const embedUrl = makeYoutubeEmbedUrl(post.mediaUrl);
-              mediaHtml = `
-                <div class="post-media">
-                  <iframe
-                    src="${embedUrl}"
-                    frameborder="0"
-                    allowfullscreen
-                  ></iframe>
-                </div>
-              `;
-            } else {
-              mediaHtml = `
-                <div class="post-media">
-                  <video controls src="${post.mediaUrl}"></video>
-                </div>
-              `;
-            }
-          } else {
-            mediaHtml = `
-              <div class="post-media">
-                <img src="${post.mediaUrl}" alt="첨부 이미지">
-              </div>
-            `;
-          }
+        if (!res.ok || !data.success) {
+          console.error("댓글 등록 실패:", res.status, data);
+          alert("댓글 등록 실패");
+          return;
         }
 
-        card.innerHTML = `
-          <h3 class="post-title">${safeTitle}</h3>
-          <p class="post-content">${safeContent}</p>
-          ${mediaHtml}
-          <div class="post-meta">
-            <span class="post-author">${safeNickname}</span>
-            <span class="post-date">${createdStr}</span>
+        const list = document.querySelector(
+          `.comment-list[data-post-id="${postId}"]`
+        );
+        if (!list) return;
+
+        const emptySpan = list.querySelector(".comment-empty");
+        if (emptySpan) emptySpan.remove();
+
+        const div = document.createElement("div");
+        div.className = "comment-item";
+        div.innerHTML = `<strong>${escapeHtml(
+          data.comment.authorNickname
+        )}</strong>${escapeHtml(data.comment.content)}`;
+        list.appendChild(div);
+
+        input.value = "";
+      } catch (err) {
+        console.error("댓글 등록 중 통신 오류:", err);
+        alert("서버와 통신 중 오류가 발생했습니다.");
+      }
+    });
+  }
+
+  // ▶ 초기 글 목록 로드
+  loadPosts();
+});
+
+// 게시글 목록 불러오기
+async function loadPosts() {
+  try {
+    const res = await fetch(`${API_BASE}/community/posts`);
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      console.error("게시글 로드 실패:", res.status, data);
+      return;
+    }
+
+    const feed = document.querySelector(".community-feed");
+    if (!feed) return;
+
+    feed.innerHTML = "";
+
+    data.posts.forEach((post) => {
+      appendPost(post);
+      loadComments(post._id);
+    });
+  } catch (err) {
+    console.error("게시글 로드 중 오류:", err);
+  }
+}
+
+// 게시글 카드 추가/앞에 추가
+function appendPost(post) {
+  const feed = document.querySelector(".community-feed");
+  if (!feed) return;
+  const card = createPostCard(post);
+  feed.appendChild(card);
+}
+
+function prependPost(post) {
+  const feed = document.querySelector(".community-feed");
+  if (!feed) return;
+  const card = createPostCard(post);
+  feed.prepend(card);
+  loadComments(post._id);
+}
+
+// 게시글 카드 생성 (삭제 버튼 + 유튜브 embed 처리)
+function createPostCard(post) {
+  const user = getCurrentUser();
+  const wrapper = document.createElement("article");
+  wrapper.className = "post-card";
+  wrapper.dataset.post = post._id; // 삭제 시 DOM 찾기용
+
+  const created = new Date(post.createdAt || Date.now());
+  const dateText = created.toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  let mediaHtml = "";
+  if (post.mediaUrl) {
+    if (/youtube\.com|youtu\.be/.test(post.mediaUrl)) {
+      const embedUrl = getYoutubeEmbedUrl(post.mediaUrl);
+      if (embedUrl) {
+        mediaHtml = `
+          <div class="post-video-wrapper">
+            <iframe
+              src="${embedUrl}"
+              title="YouTube video"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
           </div>
         `;
-
-        feed.appendChild(card);
-      });
-    } catch (err) {
-      console.error(err);
-      feed.innerHTML = "<p>게시글을 불러오는 중 오류가 발생했습니다.</p>";
-    }
-  }
-
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  function makeYoutubeEmbedUrl(url) {
-    try {
-      if (url.includes("youtu.be/")) {
-        const id = url.split("youtu.be/")[1].split(/[?&]/)[0];
-        return `https://www.youtube.com/embed/${id}`;
+      } else {
+        mediaHtml = `<a href="${post.mediaUrl}" target="_blank" rel="noopener noreferrer">영상 보기</a>`;
       }
-      const u = new URL(url);
-      const id = u.searchParams.get("v");
-      if (id) return `https://www.youtube.com/embed/${id}`;
-      return url;
-    } catch {
-      return url;
+    } else {
+      mediaHtml = `<img src="${post.mediaUrl}" alt="이미지">`;
     }
   }
-});
+
+  // 삭제 버튼 (작성자 본인일 때만)
+  const deleteButtonHtml =
+    user && user.id == post.authorId
+      ? `<button class="delete-btn" onclick="deletePost('${post._id}')">삭제</button>`
+      : "";
+
+  wrapper.innerHTML = `
+    ${deleteButtonHtml}
+    <h3 class="post-header">${escapeHtml(post.title)}</h3>
+    <div class="post-content">
+      <p>${escapeHtml(post.content)}</p>
+      ${mediaHtml || ""}
+    </div>
+
+    <div class="post-meta">
+      <span>${escapeHtml(post.authorNickname)}</span>
+      <span>${dateText}</span>
+    </div>
+
+    <div class="comment-section">
+      <div class="comment-list" data-post-id="${post._id}">
+        <span class="comment-empty">아직 댓글이 없습니다.</span>
+      </div>
+
+      ${
+        user
+          ? `
+        <form class="comment-form" data-post-id="${post._id}">
+          <input type="text" placeholder="댓글을 입력하세요" />
+          <button type="submit">등록</button>
+        </form>
+      `
+          : `
+        <div class="comment-login-hint">
+          댓글을 작성하려면 로그인하세요.
+        </div>
+      `
+      }
+    </div>
+  `;
+
+  return wrapper;
+}
+
+// 댓글 목록 불러오기
+async function loadComments(postId) {
+  try {
+    const res = await fetch(`${API_BASE}/community/${postId}/comments`);
+    const data = await res.json();
+
+    if (!res.ok || !data.success) return;
+
+    const list = document.querySelector(
+      `.comment-list[data-post-id="${postId}"]`
+    );
+    if (!list) return;
+
+    list.innerHTML = "";
+
+    if (data.comments.length === 0) {
+      list.innerHTML = `<span class="comment-empty">아직 댓글이 없습니다.</span>`;
+      return;
+    }
+
+    data.comments.forEach((c) => {
+      const div = document.createElement("div");
+      div.className = "comment-item";
+      div.innerHTML = `<strong>${escapeHtml(
+        c.authorNickname
+      )}</strong>${escapeHtml(c.content)}`;
+      list.appendChild(div);
+    });
+  } catch (err) {
+    console.error("댓글 목록 로드 중 오류:", err);
+  }
+}
+
+// 게시글 삭제 (프론트에서 서버로 DELETE 요청)
+async function deletePost(postId) {
+  if (!confirm("삭제하시겠습니까?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/community/post/${postId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await res.json();
+    console.log("삭제 결과:", data);
+
+    if (data.success) {
+      alert("삭제 완료!");
+      document.querySelector(`[data-post="${postId}"]`)?.remove();
+    } else {
+      alert(data.message || "삭제 실패");
+    }
+  } catch (err) {
+    console.error("게시글 삭제 중 통신 오류:", err);
+    alert("서버와 통신 중 오류가 발생했습니다.");
+  }
+}
+
+// 간단한 XSS 방지
+function escapeHtml(str) {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// 유튜브 URL을 embed용 URL로 변환
+function getYoutubeEmbedUrl(raw) {
+  try {
+    const url = new URL(raw);
+
+    // 이미 embed 주소면 그대로 사용
+    if (url.hostname.includes("youtube.com") && url.pathname.startsWith("/embed/")) {
+      return raw;
+    }
+
+    let videoId = "";
+
+    // https://youtu.be/VIDEO_ID
+    if (url.hostname.includes("youtu.be")) {
+      videoId = url.pathname.slice(1); // 맨 앞의 '/' 제거
+    }
+
+    // https://www.youtube.com/watch?v=VIDEO_ID
+    if (url.hostname.includes("youtube.com")) {
+      if (url.pathname === "/watch") {
+        videoId = url.searchParams.get("v") || "";
+      } else if (url.pathname.startsWith("/shorts/")) {
+        // https://www.youtube.com/shorts/VIDEO_ID
+        const parts = url.pathname.split("/");
+        videoId = parts[2] || "";
+      }
+    }
+
+    if (!videoId) return null;
+
+    return `https://www.youtube.com/embed/${videoId}`;
+  } catch (e) {
+    console.error("유튜브 URL 파싱 실패:", raw, e);
+    return null;
+  }
+}

@@ -1,242 +1,152 @@
 // server.js
-const express = require('express');
-const cors = require('cors');
-const bcrypt = require('bcrypt');
-const db = require('./db');        // MySQL 연결
-const { Post, Comment } = require('./mongo'); // MongoDB 연결 + 모델
+const express = require("express");
+const cors = require("cors");
+const bcrypt = require("bcrypt");
+
+const db = require("./db");                     // MySQL 연결 (users)
+const { Post, Comment } = require("./mongo");   // MongoDB 연결 + 모델들
 
 const app = express();
+const PORT = 3000;
 
-app.use(cors());
+// CORS + JSON 파서
+// 쿠키/세션을 쓰지 않고, 프론트는 localStorage로 로그인 상태를 관리하므로
+// credentials:false 로 두고, origin:true 로 개발용 모든 origin 허용
+app.use(
+  cors({
+    origin: true,
+    credentials: false,
+  })
+);
 app.use(express.json());
 
-// 모든 요청 로깅
-app.use((req, res, next) => {
-  console.log(`[REQ] ${req.method} ${req.url}`);
-  next();
+// 단순 헬스 체크
+app.get("/", (req, res) => {
+  res.send("FC Bayern backend running...");
 });
 
-// ================= 기본 =================
-app.get('/', (req, res) => {
-  res.send('FC Bayern backend running...');
-});
-
-// ================= MySQL: 유저 관련 =================
-
-// 전체 사용자 조회
-app.get('/users', async (req, res) => {
-  try {
-    const [rows] = await db.query('SELECT id, username, nickname, created_at FROM users');
-    res.json(rows);
-  } catch (err) {
-    console.error('DB ERROR:', err);
-    res.status(500).json({
-      success: false,
-      message: 'DB 조회 오류',
-    });
-  }
-});
+//
+// 1) MySQL: 회원가입 / 로그인 / 유저 목록
+//
 
 // 회원가입
-app.post('/signup', async (req, res) => {
+app.post("/signup", async (req, res) => {
   try {
-    console.log('POST /signup:', req.body);
+    const { nickname, username, password } = req.body;
+    console.log("POST /signup", req.body);
 
-    const { username, password, nickname } = req.body;
-
-    if (!username || !password || !nickname) {
-      return res.status(400).json({
-        success: false,
-        message: '모든 필드를 입력하세요.',
-      });
+    if (!nickname || !username || !password) {
+      return res.json({ success: false, message: "필수 값 누락" });
     }
 
+    // 아이디 중복 확인
     const [exist] = await db.query(
-      'SELECT id FROM users WHERE username = ?',
+      "SELECT id FROM users WHERE username = ?",
       [username]
     );
     if (exist.length > 0) {
-      return res.status(400).json({
+      return res.json({
         success: false,
-        message: '이미 존재하는 아이디입니다.',
+        message: "이미 존재하는 아이디입니다.",
       });
     }
 
     const hashed = await bcrypt.hash(password, 10);
 
-    await db.query(
-      'INSERT INTO users (username, password, nickname) VALUES (?, ?, ?)',
+    const [result] = await db.query(
+      "INSERT INTO users (username, password, nickname) VALUES (?, ?, ?)",
       [username, hashed, nickname]
     );
 
-    return res.status(201).json({
+    return res.json({
       success: true,
-      message: '회원가입 완료',
+      user: {
+        id: result.insertId,
+        username,
+        nickname,
+      },
     });
-
   } catch (err) {
-    console.error('SIGNUP ERROR:', err);
-    res.status(500).json({
+    console.error("SIGNUP ERROR:", err);
+    return res.status(500).json({
       success: false,
-      message: '서버 오류 (회원가입 처리 중)',
+      message: "서버 오류(회원가입)",
     });
   }
 });
 
 // 로그인
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
   try {
-    console.log('POST /login:', req.body);
-
     const { username, password } = req.body;
+    console.log("POST /login", req.body);
 
     if (!username || !password) {
-      return res.status(400).json({
+      return res.json({
         success: false,
-        message: '아이디와 비밀번호를 입력하세요.',
+        message: "아이디/비밀번호 입력 필요",
       });
     }
 
-    const [users] = await db.query(
-      'SELECT * FROM users WHERE username = ?',
+    const [rows] = await db.query(
+      "SELECT * FROM users WHERE username = ?",
       [username]
     );
-    if (users.length === 0) {
-      return res.status(401).json({
+    if (rows.length === 0) {
+      return res.json({
         success: false,
-        message: '아이디 또는 비밀번호가 올바르지 않습니다.',
+        message: "존재하지 않는 아이디입니다.",
       });
     }
 
-    const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
+    const user = rows[0];
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.json({
         success: false,
-        message: '아이디 또는 비밀번호가 올바르지 않습니다.',
+        message: "비밀번호가 일치하지 않습니다.",
       });
     }
 
+    // 세션은 쓰지 않고, 프론트에서 localStorage 로 user 보관
     return res.json({
       success: true,
-      message: '로그인 성공',
       user: {
         id: user.id,
         username: user.username,
         nickname: user.nickname,
       },
     });
-
   } catch (err) {
-    console.error('LOGIN ERROR:', err);
-    res.status(500).json({
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({
       success: false,
-      message: '서버 오류 (로그인 처리 중)',
+      message: "서버 오류(로그인)",
     });
   }
 });
 
-// ================= MongoDB: 커뮤니티 게시글 =================
-
-// 게시글 목록 가져오기 (최신순)
-app.get('/community/posts', async (req, res) => {
+// 디버그용: 유저 목록
+app.get("/users", async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 }).lean();
-    res.json({
-      success: true,
-      posts,
-    });
+    const [rows] = await db.query(
+      "SELECT id, username, nickname, created_at FROM users"
+    );
+    res.json(rows);
   } catch (err) {
-    console.error('GET /community/posts ERROR:', err);
+    console.error("USERS ERROR:", err);
     res.status(500).json({
       success: false,
-      message: '게시글 목록 조회 중 오류',
+      message: "서버 오류(유저 목록)",
     });
   }
 });
 
-// 게시글 하나 상세
-app.get('/community/posts/:id', async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id).lean();
-    if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: '게시글을 찾을 수 없습니다.',
-      });
-    }
-    res.json({
-      success: true,
-      post,
-    });
-  } catch (err) {
-    console.error('GET /community/posts/:id ERROR:', err);
-    res.status(500).json({
-      success: false,
-      message: '게시글 조회 중 오류',
-    });
-  }
-});
+//
+// 2) MongoDB: 커뮤니티 글 / 댓글
+//
 
-// 게시글 작성
-app.post('/community/posts', async (req, res) => {
-  try {
-    console.log('POST /community/posts:', req.body);
-
-    const { title, content, authorId, authorNickname } = req.body;
-
-    if (!title || !content || !authorId || !authorNickname) {
-      return res.status(400).json({
-        success: false,
-        message: '제목, 내용, 작성자 정보가 필요합니다.',
-      });
-    }
-
-    const newPost = await Post.create({
-      title,
-      content,
-      authorId,
-      authorNickname,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: '게시글이 등록되었습니다.',
-      post: newPost,
-    });
-  } catch (err) {
-    console.error('POST /community/posts ERROR:', err);
-    res.status(500).json({
-      success: false,
-      message: '게시글 작성 중 서버 오류',
-    });
-  }
-});
-
-// (선택) 게시글 삭제
-app.delete('/community/posts/:id', async (req, res) => {
-  try {
-    await Post.findByIdAndDelete(req.params.id);
-    res.json({
-      success: true,
-      message: '게시글이 삭제되었습니다.',
-    });
-  } catch (err) {
-    console.error('DELETE /community/posts/:id ERROR:', err);
-    res.status(500).json({
-      success: false,
-      message: '게시글 삭제 중 서버 오류',
-    });
-  }
-});
-
-// ================= 서버 실행 =================
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
-
+// 글 작성
 app.post("/community/post", async (req, res) => {
   try {
     const {
@@ -247,6 +157,8 @@ app.post("/community/post", async (req, res) => {
       mediaUrl,
       mediaType,
     } = req.body;
+
+    console.log("POST /community/post", req.body);
 
     if (!title || !content || !authorId || !authorNickname) {
       return res.json({ success: false, message: "데이터 누락" });
@@ -261,9 +173,94 @@ app.post("/community/post", async (req, res) => {
       mediaType: mediaType || null,
     });
 
-    res.json({ success: true, post });
+    return res.json({ success: true, post });
   } catch (err) {
-    console.error(err);
-    res.json({ success: false, message: "DB 오류" });
+    console.error("COMMUNITY POST ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "서버 오류(게시글 작성)",
+    });
   }
+});
+
+// 글 목록
+app.get("/community/posts", async (req, res) => {
+  try {
+    console.log("GET /community/posts");
+    const posts = await Post.find().sort({ createdAt: -1 }).lean();
+    return res.json({ success: true, posts });
+  } catch (err) {
+    console.error("COMMUNITY LIST ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "서버 오류(게시글 목록)",
+    });
+  }
+});
+
+// 댓글 작성
+app.post("/community/:postId/comment", async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { authorId, authorNickname, content } = req.body;
+
+    console.log("POST /community/:postId/comment", { postId, ...req.body });
+
+    if (!content || !authorId || !authorNickname) {
+      return res.json({ success: false, message: "데이터 누락" });
+    }
+
+    const comment = await Comment.create({
+      postId,
+      authorId,
+      authorNickname,
+      content,
+    });
+
+    res.json({ success: true, comment });
+  } catch (err) {
+    console.error("COMMENT CREATE ERROR:", err);
+    res.json({ success: false, message: "DB 오류(댓글 작성)" });
+  }
+});
+
+// 댓글 목록
+app.get("/community/:postId/comments", async (req, res) => {
+  try {
+    const { postId } = req.params;
+    console.log("GET /community/:postId/comments", postId);
+
+    const comments = await Comment.find({ postId })
+      .sort({ createdAt: 1 }) // 오래된 댓글부터
+      .lean();
+
+    res.json({ success: true, comments });
+  } catch (err) {
+    console.error("COMMENT LIST ERROR:", err);
+    res.json({ success: false, message: "DB 오류(댓글 목록)" });
+  }
+});
+
+// 게시글 삭제
+app.delete("/community/post/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 게시글 삭제
+    await Post.findByIdAndDelete(id);
+
+    // 연관 댓글도 삭제
+    await Comment.deleteMany({ postId: id });
+
+    res.json({ success: true, message: "게시글 및 댓글 삭제 완료" });
+  } catch (err) {
+    console.error("POST DELETE ERROR:", err);
+    res.json({ success: false, message: "게시글 삭제 실패" });
+  }
+});
+
+
+// 서버 실행
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });

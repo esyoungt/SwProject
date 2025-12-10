@@ -1,25 +1,78 @@
-/* 커뮤니티 전체 레이아웃 정리 */
+/* =========================
+   커뮤니티 페이지 레이아웃
+========================= */
+
 .community-page {
   max-width: 960px;
   margin: 0 auto;
   padding: 24px 16px 40px;
 }
 
-/* 글쓰기 영역을 가운데 카드처럼 */
-.community-write {
-  margin: 16px auto 24px;
+
+/* =========================
+   글쓰기 버튼 영역
+========================= */
+
+.community-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 16px 0;
+}
+
+.btn-primary {
+  background: #dc052d;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  font-size: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-primary:hover {
+  background: #b50027;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 10px 16px;
+  font-size: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #f5f5f5;
+}
+
+
+/* =========================
+   글쓰기 폼
+========================= */
+
+#writeSection {
+  display: none;
 }
 
 .write-form {
   max-width: 720px;
-  margin: 0 auto;
+  margin: 0 auto 24px;
+  padding: 22px 26px;
   background: #ffffff;
-  border-radius: 10px;
-  padding: 20px 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
 }
 
-.write-form .form-row {
+.write-form h2 {
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.form-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -35,57 +88,214 @@
 .write-form input[type="url"],
 .write-form textarea {
   border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 8px 10px;
+  border-radius: 8px;
+  padding: 10px;
   font-size: 14px;
   resize: vertical;
 }
 
 .write-form textarea {
-  min-height: 120px;
+  min-height: 140px;
 }
 
-.write-actions {
+.write-form .hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: -4px;
+}
+
+.write-form .form-actions {
   display: flex;
-  gap: 8px;
   justify-content: flex-end;
-}
-
-/* 기본 버튼 느낌 (필요하면 이미 있는 스타일과 합쳐도 됨) */
-.primary-btn {
-  border: none;
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  background: #dc052d;
-  color: #fff;
-}
-
-.secondary-btn {
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-size: 14px;
-  cursor: pointer;
-  background: #fff;
-}
-
-/* 게시글 카드 안에서 이미지/영상 영역 */
-.post-media {
+  gap: 10px;
   margin-top: 10px;
 }
 
-.post-media img {
-  max-width: 100%;
-  border-radius: 8px;
-  display: block;
+
+/* =========================
+   게시글 카드 스타일
+========================= */
+
+.community-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
-.post-media iframe,
+.post-card {
+  background: #fff;
+  padding: 18px 22px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.post-header {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.post-content {
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* 이미지/영상 처리: 세로 길이 제한 */
+.post-media {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.post-media img,
 .post-media video {
-  width: 100%;
   max-width: 100%;
-  border-radius: 8px;
+  max-height: 320px;      /* <= 세로 길이 제한 */
+  border-radius: 10px;
+  object-fit: cover;      /* 가운데 기준으로 잘라 보이게 */
+}
+
+.post-media iframe {
+  width: 100%;
+  max-height: 320px;      /* 유튜브도 너무 길어지지 않게 */
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+}
+
+/* 게시글 안 이미지 크기 재조정 */
+.post-content img {
+  width: 100%;
+  max-width: 500px; /* 이미지가 너무 큰 경우 제한 */
+  height: auto;
+  display: block;
+  margin: 16px auto;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+
+/* 작성자 + 날짜 */
+.post-meta {
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  justify-content: space-between;
+}
+
+
+/* =========================
+   댓글 영역
+========================= */
+
+.comment-section {
+  margin-top: 10px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.comment-item {
+  font-size: 13px;
+  color: #333;
+}
+
+.comment-item strong {
+  margin-right: 4px;
+}
+
+.comment-empty {
+  font-size: 12px;
+  color: #888;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.comment-form input[type="text"] {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.comment-form button {
+  border-radius: 999px;
+  border: none;
+  padding: 6px 12px;
+  font-size: 13px;
+  background: #dc052d;
+  color: #fff;
+  cursor: pointer;
+}
+
+.comment-form button:hover {
+  background: #b50027;
+}
+
+.comment-login-hint {
+  font-size: 12px;
+  color: #666;
+}
+.post-content img {
+  width: 100%;
+  max-width: 500px; /* 이미지가 너무 큰 경우 제한 */
+  height: auto;
+  display: block;
+  margin: 16px auto;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.post-card {
+  position: relative;
+  padding-top: 10px;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  background: #b71c1c;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  
+  opacity: 0.6;
+  transition: 0.2s;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  background: #d32f2f;
+}
+
+.post-video-wrapper {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 800px;     /* 너무 넓어지지 않게 */
+  aspect-ratio: 16 / 9; /* 16:9 비율 유지 */
+}
+
+.post-video-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
 }
