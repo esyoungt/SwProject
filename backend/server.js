@@ -4,24 +4,40 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 
-const db = require("./db");              // MySQL 연결 (users 테이블)
-const { Post, Comment } = require("./mongo"); // MongoDB 연결 + 모델들
+const db = require("./db");                // ✅ MySQL 풀
+const { Post, Comment } = require("./mongo"); // MongoDB 모델들
 
 const app = express();
-const PORT = process.env.PORT || 3000;   // Render 배포 대비
+const PORT = process.env.PORT || 3000;
 
 // CORS + JSON 파서
 app.use(
   cors({
-    origin: true,        // 개발 단계: 모든 Origin 허용
-    credentials: false,  // 쿠키 안 쓰고 localStorage만 사용
+    origin: true,
+    credentials: false,
   })
 );
 app.use(express.json());
 
-// 단순 헬스 체크
+// 헬스 체크
 app.get("/", (req, res) => {
   res.send("FC Bayern backend running...");
+});
+
+//
+// 0) MySQL 연결 테스트용 라우트
+//
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM users");
+    res.json({
+      status: "ok",
+      data: rows,
+    });
+  } catch (err) {
+    console.error("DB ERROR:", err);
+    res.status(500).json({ error: "Database connection failed" });
+  }
 });
 
 //
@@ -38,7 +54,6 @@ app.post("/signup", async (req, res) => {
       return res.json({ success: false, message: "필수 값 누락" });
     }
 
-    // 아이디 중복 확인
     const [exist] = await db.query(
       "SELECT id FROM users WHERE username = ?",
       [username]
@@ -107,7 +122,6 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    // 프론트가 localStorage에 user 저장해서 사용
     return res.json({
       success: true,
       user: {
@@ -125,7 +139,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// 유저 목록 (디버그용)
+// 유저 목록
 app.get("/users", async (req, res) => {
   try {
     const [rows] = await db.query(

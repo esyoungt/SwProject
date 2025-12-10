@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mysql:
     image: mysql:8
@@ -10,7 +8,7 @@ services:
       MYSQL_USER: fcbuser
       MYSQL_PASSWORD: fcbpass
     ports:
-      - "3306:3306"
+      - "3307:3306"          # 로컬 PC에서는 3307로 접속
     volumes:
       - mysql_data:/var/lib/mysql
 
@@ -23,14 +21,17 @@ services:
       - mongo_data:/data/db
 
   app:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: node_app
-    restart: always
-    ports:
-      - "3000:3000"
     depends_on:
       - mysql
       - mongodb
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
     environment:
       DB_HOST: mysql
       DB_USER: fcbuser
